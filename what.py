@@ -8,8 +8,10 @@ MAX_GUIAS = 10
 EXCEL_NAME = "ESTATUS DIARIO NUEVO.xlsx"
 # ================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-EXCEL_PATH = os.path.join(BASE_DIR, EXCEL_NAME)
+EXCEL_URL = "https://pacustomsec-my.sharepoint.com/:x:/g/personal/tababela_pacustoms_com_ec/IQCXWyChYgg-Q5ncYOYtPLMgAXClPOYykl8T-ihNYgbei5Y/download"
+
+df = pd.read_excel(EXCEL_URL)
+
 
 df = pd.read_excel(EXCEL_PATH)
 
@@ -86,3 +88,4 @@ if __name__ == "__main__":
 
     mensaje = " ".join(lineas)
     print("\n" + procesar_mensaje(mensaje))
+
