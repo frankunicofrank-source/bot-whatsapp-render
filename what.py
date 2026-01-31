@@ -1,15 +1,17 @@
 import pandas as pd
+import os
 import re
 from datetime import datetime
 
 # ================= CONFIGURACIÓN =================
 MAX_GUIAS = 10
+EXCEL_NAME = "ESTATUS DIARIO NUEVO.xlsx"
 # ================================================
 
-# Excel SIEMPRE actualizado desde OneDrive
-EXCEL_URL = "https://pacustomsec-my.sharepoint.com/:x:/g/personal/tababela_pacustoms_com_ec/IQCXWyChYgg-Q5ncYOYtPLMgAXClPOYykl8T-ihNYgbei5Y/download"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+EXCEL_PATH = os.path.join(BASE_DIR, EXCEL_NAME)
 
-df = pd.read_excel(EXCEL_URL)
+df = pd.read_excel(EXCEL_PATH)
 
 # ---------- UTILIDADES ----------
 def saludo():
@@ -28,6 +30,7 @@ def buscar_guias(lista_guias):
     if resultados.empty:
         return "❌ No se encontró información para las guías enviadas."
 
+    # Ordenar por fecha de arribo
     resultados = resultados.sort_values(by="FECHA DE ARRIBO")
 
     mensajes = []
@@ -71,5 +74,15 @@ def procesar_mensaje(texto):
 
 # ---------- MODO PRUEBA LOCAL ----------
 if __name__ == "__main__":
-    mensaje = input("Mensaje: ")
-    print(procesar_mensaje(mensaje))
+    print("Escribe el mensaje (una o varias líneas).")
+    print("Cuando termines presiona ENTER, luego CTRL+Z y ENTER:\n")
+
+    lineas = []
+    while True:
+        try:
+            lineas.append(input())
+        except EOFError:
+            break
+
+    mensaje = " ".join(lineas)
+    print("\n" + procesar_mensaje(mensaje))
