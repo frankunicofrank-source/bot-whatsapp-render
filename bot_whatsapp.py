@@ -11,12 +11,19 @@ def whatsapp():
     incoming_msg = request.values.get("Body", "").strip()
     print("Mensaje recibido:", incoming_msg)
 
-    # 👇 AQUÍ ESTÁ LA CLAVE
     respuesta = procesar_mensaje(incoming_msg)
 
     resp = MessagingResponse()
     msg = resp.message()
+
+    # Texto del bot
     msg.body(respuesta)
+
+    # 👇 LOGO PACUSTOMS (desde GitHub RAW)
+    msg.media(
+        "https://raw.githubusercontent.com/frankunicofrank-source/"
+        "bot-whatsapp-render/main/logo_pacustoms.PNG"
+    )
 
     return str(resp)
 
