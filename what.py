@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import re
-from datetime import datetime
 
 # ================= CONFIGURACIÓN =================
 MAX_GUIAS = 10
@@ -13,30 +12,27 @@ EXCEL_PATH = os.path.join(BASE_DIR, EXCEL_NAME)
 
 df = pd.read_excel(EXCEL_PATH)
 
-# ---------- UTILIDADES ----------
-def saludo():
-    hora = datetime.now().hour
-    if 5 <= hora < 12:
-        return "🌅 Buenos días"
-    elif 12 <= hora < 19:
-        return "☀️ Buenas tardes"
-    else:
-        return "🌙 Buenas noches"
+# Convertir columnas a texto para evitar errores
+df["GUIA"] = df["GUIA"].astype(str).str.strip()
+df["REFERENCIA"] = df["REFERENCIA"].astype(str).str.strip()
 
 # ---------- LÓGICA PRINCIPAL ----------
-def buscar_guias(lista_guias):
-    resultados = df[df["GUIA"].isin(lista_guias)]
+def buscar_guias(lista_busqueda):
+    resultados = df[
+        df["GUIA"].isin(lista_busqueda) |
+        df["REFERENCIA"].isin(lista_busqueda)
+    ]
 
     if resultados.empty:
-        return "❌ No se encontró información para las guías enviadas."
+        return "❌ No se encontró información para las guías o referencias enviadas."
 
-    # Ordenar por fecha de arribo
     resultados = resultados.sort_values(by="FECHA DE ARRIBO")
 
     mensajes = []
     for _, f in resultados.iterrows():
         mensajes.append(
             f"📦 *Guía:* {f['GUIA']}\n"
+            f"🔖 *Referencia:* {f['REFERENCIA']}\n"
             f"⚙️ *Proceso:* {f['PROCESO']}\n"
             f"📅 *Arribo:* {f['FECHA DE ARRIBO']}\n"
             f"📌 *Estado:* {f['STATUS']}"
@@ -45,31 +41,34 @@ def buscar_guias(lista_guias):
     return "\n\n".join(mensajes)
 
 def procesar_mensaje(texto):
-    numeros = re.findall(r"\d+", texto)
+    # Detectar palabras, números, guiones y letras
+    tokens = re.findall(r"[A-Za-z0-9\-]+(?:\s?[A-Za-z]+)?", texto)
 
-    if not numeros:
+    if not tokens:
         return (
-            f"{saludo()} 👋\n\n"
-            "ℹ️ Para consultar el estado, envía el número de guía.\n"
-            "📌 Ejemplo:\n"
+            "Reciba un cordial saludo de *Pacustoms*.\n\n"
+            "ℹ️ Para consultar el estado, envía el número de guía o referencia.\n"
+            "📌 Ejemplos:\n"
             "72993106554\n"
-            "o varias guías separadas por espacios."
+            "26-068 MIA\n"
+            "26-070A\n\n"
+            "🤝 *Fue un gusto atenderte.*"
         )
 
-    if len(numeros) > MAX_GUIAS:
+    if len(tokens) > MAX_GUIAS:
         return (
-            f"⚠️ Has enviado *{len(numeros)} guías*.\n"
+            f"⚠️ Has enviado *{len(tokens)} valores*.\n"
             f"🔢 El máximo permitido es *{MAX_GUIAS}* por mensaje."
         )
 
-    numeros = list(map(int, numeros))
-    cuerpo = buscar_guias(numeros)
+    tokens = [t.strip() for t in tokens]
+    cuerpo = buscar_guias(tokens)
 
     return (
-        f"{saludo()} 👋\n\n"
-        "*Reciba una cordial saludo de Pacustoms:*\n\n"
+        "Reciba un cordial saludo de *Pacustoms*.\n\n"
+        "📋 *El estado de sus guías es el siguiente:*\n\n"
         f"{cuerpo}\n\n"
-        "✅ *Fue un gusto atenderte.*"
+        "🤝 *Fue un gusto atenderte.*"
     )
 
 # ---------- MODO PRUEBA LOCAL ----------
@@ -86,4 +85,3 @@ if __name__ == "__main__":
 
     mensaje = " ".join(lineas)
     print("\n" + procesar_mensaje(mensaje))
-
