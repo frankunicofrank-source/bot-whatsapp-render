@@ -67,9 +67,9 @@ def procesar_mensaje(texto):
 
     return (
         f"{saludo()} 👋\n\n"
-        "📋 *Con gusto, el estado de tus guías es el siguiente:*\n\n"
+        "*Reciba una cordial saludo de Pacustoms:*\n\n"
         f"{cuerpo}\n\n"
-        "✅ *Quedamos atentos a cualquier otra consulta.*"
+        "✅ *Fue un gusto atenderte.*"
     )
 
 # ---------- MODO PRUEBA LOCAL ----------
@@ -86,3 +86,4 @@ if __name__ == "__main__":
 
     mensaje = " ".join(lineas)
     print("\n" + procesar_mensaje(mensaje))
+
