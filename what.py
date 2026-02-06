@@ -10,14 +10,31 @@ EXCEL_NAME = "ESTATUS DIARIO NUEVO.xlsx"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 EXCEL_PATH = os.path.join(BASE_DIR, EXCEL_NAME)
 
-df = pd.read_excel(EXCEL_PATH)
+# ---------- CARGA SEGURA DEL EXCEL ----------
+def cargar_excel():
+    if not os.path.exists(EXCEL_PATH):
+        return None, f"❌ No se encontró el archivo *{EXCEL_NAME}*."
 
-# Convertir columnas a texto para evitar errores
-df["GUIA"] = df["GUIA"].astype(str).str.strip()
-df["REFERENCIA"] = df["REFERENCIA"].astype(str).str.strip()
+    try:
+        df = pd.read_excel(EXCEL_PATH)
+    except Exception as e:
+        return None, f"❌ Error al leer el Excel: {e}"
 
-# ---------- LÓGICA PRINCIPAL ----------
-def buscar_guias(lista_busqueda):
+    columnas_requeridas = {
+        "GUIA", "REFERENCIA", "PROCESO", "FECHA DE ARRIBO", "STATUS"
+    }
+
+    faltantes = columnas_requeridas - set(df.columns)
+    if faltantes:
+        return None, f"❌ Faltan columnas en el Excel: {', '.join(faltantes)}"
+
+    df["GUIA"] = df["GUIA"].astype(str).str.strip()
+    df["REFERENCIA"] = df["REFERENCIA"].astype(str).str.strip()
+
+    return df, None
+
+# ---------- BÚSQUEDA ----------
+def buscar_guias(df, lista_busqueda):
     resultados = df[
         df["GUIA"].isin(lista_busqueda) |
         df["REFERENCIA"].isin(lista_busqueda)
@@ -40,8 +57,12 @@ def buscar_guias(lista_busqueda):
 
     return "\n\n".join(mensajes)
 
+# ---------- PROCESADOR PRINCIPAL ----------
 def procesar_mensaje(texto):
-    # Detectar palabras, números, guiones y letras
+    df, error = cargar_excel()
+    if error:
+        return error
+
     tokens = re.findall(r"[A-Za-z0-9\-]+(?:\s?[A-Za-z]+)?", texto)
 
     if not tokens:
@@ -62,7 +83,10 @@ def procesar_mensaje(texto):
         )
 
     tokens = [t.strip() for t in tokens]
-    cuerpo = buscar_guias(tokens)
+    cuerpo = buscar_guias(df, tokens)
+
+    if cuerpo.startswith("❌"):
+        return cuerpo
 
     return (
         "Reciba un cordial saludo de *Pacustoms*.\n\n"
@@ -71,17 +95,8 @@ def procesar_mensaje(texto):
         "🤝 *Fue un gusto atenderte.*"
     )
 
-# ---------- MODO PRUEBA LOCAL ----------
+# ---------- PRUEBA LOCAL ----------
 if __name__ == "__main__":
-    print("Escribe el mensaje (una o varias líneas).")
-    print("Cuando termines presiona ENTER, luego CTRL+Z y ENTER:\n")
-
-    lineas = []
-    while True:
-        try:
-            lineas.append(input())
-        except EOFError:
-            break
-
-    mensaje = " ".join(lineas)
+    print("Escribe el mensaje y presiona ENTER:\n")
+    mensaje = input()
     print("\n" + procesar_mensaje(mensaje))
