@@ -16,13 +16,19 @@ def whatsapp():
     resp = MessagingResponse()
     msg = resp.message()
 
-    # Texto del bot
+    # Texto del bot (NO se toca)
     msg.body(respuesta)
 
-    # 👇 LOGO PACUSTOMS (desde GitHub RAW)
+    # Logo (NO se toca)
     msg.media(
         "https://raw.githubusercontent.com/frankunicofrank-source/"
         "bot-whatsapp-render/main/logo_pacustoms.PNG"
+    )
+
+    # ✅ NUEVO: imagen del oso AL FINAL
+    msg.media(
+        "https://raw.githubusercontent.com/frankunicofrank-source/"
+        "bot-whatsapp-render/main/cierre_pacustoms.png"
     )
 
     return str(resp)
