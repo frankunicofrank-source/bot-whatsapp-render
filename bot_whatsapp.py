@@ -1,7 +1,5 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-
-# 👇 IMPORTAMOS LA LÓGICA
 from what import procesar_mensaje
 
 app = Flask(__name__)
@@ -14,19 +12,18 @@ def whatsapp():
     respuesta = procesar_mensaje(incoming_msg)
 
     resp = MessagingResponse()
-    msg = resp.message()
 
-    # Texto del bot (NO se toca)
-    msg.body(respuesta)
-
-    # Logo (NO se toca)
-    msg.media(
+    # 1️⃣ MENSAJE PRINCIPAL (logo + texto)
+    msg1 = resp.message()
+    msg1.media(
         "https://raw.githubusercontent.com/frankunicofrank-source/"
         "bot-whatsapp-render/main/logo_pacustoms.PNG"
     )
+    msg1.body(respuesta)
 
-    # ✅ NUEVO: imagen del oso AL FINAL
-    msg.media(
+    # 2️⃣ MENSAJE DE CIERRE (solo el oso)
+    msg2 = resp.message()
+    msg2.media(
         "https://raw.githubusercontent.com/frankunicofrank-source/"
         "bot-whatsapp-render/main/cierre_pacustoms.png"
     )
