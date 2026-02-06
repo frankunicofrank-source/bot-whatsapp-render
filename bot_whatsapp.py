@@ -13,17 +13,17 @@ def whatsapp():
 
     resp = MessagingResponse()
 
-    # 1️⃣ MENSAJE PRINCIPAL (logo + texto)
-    msg1 = resp.message()
-    msg1.media(
+    # 1️⃣ MENSAJE PRINCIPAL (SIEMPRE PRIMERO)
+    principal = resp.message()
+    principal.media(
         "https://raw.githubusercontent.com/frankunicofrank-source/"
         "bot-whatsapp-render/main/logo_pacustoms.PNG"
     )
-    msg1.body(respuesta)
+    principal.body(respuesta)
 
-    # 2️⃣ MENSAJE DE CIERRE (solo el oso)
-    msg2 = resp.message()
-    msg2.media(
+    # 2️⃣ MENSAJE DE CIERRE (SIEMPRE DESPUÉS)
+    cierre = resp.message()
+    cierre.media(
         "https://raw.githubusercontent.com/frankunicofrank-source/"
         "bot-whatsapp-render/main/cierre_pacustoms.png"
     )
