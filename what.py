@@ -68,7 +68,6 @@ def procesar_mensaje(texto):
         "Reciba un cordial saludo de *Pacustoms*.\n\n"
         "📋 *El estado de sus guías es el siguiente:*\n\n"
         f"{cuerpo}\n\n"
-        "🤝 *Fue un gusto atenderte.*"
     )
 
 # ---------- MODO PRUEBA LOCAL ----------
