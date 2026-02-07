@@ -1,38 +1,58 @@
 import sqlite3
-import os
 import re
+import os
 
-# ================= CONFIG =================
+# ================= CONFIGURACIÓN =================
 MAX_GUIAS = 10
 DB_NAME = "guias.db"
-# ==========================================
+TABLA = "guias"
+# ================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, DB_NAME)
 
 
-def conectar_db():
-    return sqlite3.connect(DB_PATH)
+# ---------- NORMALIZACIÓN ÚNICA ----------
+def normalizar(valor: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", str(valor).upper())
 
 
-def buscar_guias(lista_busqueda):
+# ---------- CONSULTA A SQLITE (NORMALIZADA) ----------
+def consultar_guias(lista_busqueda):
     try:
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
 
-        placeholders = ",".join("?" * len(lista_busqueda))
+        placeholders = ",".join(["?"] * len(lista_busqueda))
 
-        query = f"""
-        SELECT GUIA, REFERENCIA, PROCESO, FECHA_ARRIBO, STATUS
-        FROM guias
-        WHERE GUIA IN ({placeholders})
-           OR REFERENCIA IN ({placeholders})
+        # Normalizamos GUIA y REFERENCIA en SQL igual que en Python
+        normalizacion_sql = """
+        UPPER(
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE({campo}, ' ', ''),
+                    '-', ''),
+                '.', ''),
+            '/', '')
+        )
         """
 
-        valores = lista_busqueda + lista_busqueda
-        cursor.execute(query, valores)
+        query = f"""
+        SELECT
+            GUIA,
+            REFERENCIA,
+            PROCESO,
+            "FECHA DE ARRIBO",
+            STATUS
+        FROM {TABLA}
+        WHERE {normalizacion_sql.format(campo='GUIA')} IN ({placeholders})
+           OR {normalizacion_sql.format(campo='REFERENCIA')} IN ({placeholders})
+        ORDER BY "FECHA DE ARRIBO"
+        """
 
-        filas = cursor.fetchall()
+        cur.execute(query, lista_busqueda + lista_busqueda)
+        filas = cur.fetchall()
         conn.close()
 
         if not filas:
@@ -51,9 +71,11 @@ def buscar_guias(lista_busqueda):
         return "\n\n".join(mensajes)
 
     except Exception as e:
+        print("ERROR SQLITE:", e)
         return "⚠️ Error al consultar la base de datos."
 
 
+# ---------- PROCESAMIENTO DEL MENSAJE ----------
 def procesar_mensaje(texto):
     texto = texto.strip()
 
@@ -62,13 +84,13 @@ def procesar_mensaje(texto):
             "Reciba un cordial saludo de *Pacustoms*.\n\n"
             "ℹ️ Para consultar el estado, envíe el número de guía o referencia.\n"
             "📌 Ejemplos:\n"
-            "72993106554\n"
-            "26-068MIA\n"
-            "26-070A\n\n"
+            "26-089 MIA\n"
+            "26 089 mia\n"
+            "26089MIA\n\n"
             "🤝 *Fue un gusto atenderle.*"
         )
 
-    tokens = re.findall(r"[A-Za-z0-9\-]+", texto)
+    tokens = re.findall(r"[A-Za-z0-9\-\.\s/]+", texto)
 
     if not tokens:
         return "ℹ️ No se detectaron guías válidas."
@@ -79,12 +101,12 @@ def procesar_mensaje(texto):
             f"🔢 El máximo permitido es *{MAX_GUIAS}*."
         )
 
-    tokens_norm = [
-        t.replace(".0", "").replace(" ", "").upper().strip()
-        for t in tokens
-    ]
+    tokens_norm = [normalizar(t) for t in tokens]
 
-    cuerpo = buscar_guias(tokens_norm)
+    cuerpo = consultar_guias(tokens_norm)
+
+    if cuerpo.startswith("❌") or cuerpo.startswith("⚠️"):
+        return cuerpo
 
     return (
         "Reciba un cordial saludo de *Pacustoms*.\n\n"
